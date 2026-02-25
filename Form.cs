@@ -10,10 +10,11 @@ namespace WinFormsApp1
 
         private void buttonSave_Click(object sender, EventArgs e)
         {
+            
             User u = new()
             {
                 Name = textBoxFIO.Text,
-                Date = datePicker.Value.Date,
+                Date = DateOnly.Parse(datePicker.Text),
                 City = comboBoxCity.Text,
                 Sex = (radioButtonM.Checked ? "мужской" : "женский")
             };
