@@ -19,18 +19,18 @@ namespace App2
         private readonly bool _isNewItem;
         public T Item { get; set; }
         private TableLayoutPanel _mainLayout;
-        private Dictionary<string, Control> _fieldControls;
-        private Dictionary<string, Label> _fieldLabels;
+        readonly private Dictionary<string, Control> _fieldControls;
+        readonly private Dictionary<string, Label> _fieldLabels;
         private FlowLayoutPanel _buttonPanel;
-        string tableName { get => typeof(T).GetCustomAttribute<TableNameAttribute>()!.Name; }
+        static string tableName { get => typeof(T).GetCustomAttribute<TableNameAttribute>()!.Name; }
 
         public DataBox(MySqlConnection connection, T? item = null)
         {
             _connection = connection;
             Item = item ?? new T();
             _isNewItem = item == null;
-            _fieldControls = new Dictionary<string, Control>();
-            _fieldLabels = new Dictionary<string, Label>();
+            _fieldControls = [];
+            _fieldLabels = [];
 
             InitializeComponent();
             BuildForm();
@@ -155,7 +155,7 @@ namespace App2
             row++;
         }
 
-        private ComboBox CreateForeignKeyComboBox(PropertyInfo prop, ForeignKeyAttribute fkAttr)
+        static private ComboBox CreateForeignKeyComboBox(ForeignKeyAttribute fkAttr)
         {
             return new ComboBox
             {
@@ -170,7 +170,7 @@ namespace App2
             var fkAttr = prop.GetCustomAttribute<ForeignKeyAttribute>();
             if (fkAttr != null)
             {
-                return CreateForeignKeyComboBox(prop, fkAttr);
+                return CreateForeignKeyComboBox(fkAttr);
             }
 
             Type propType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
@@ -243,7 +243,7 @@ namespace App2
             }
         }
 
-        private void SetControlValue(Control control, object value, PropertyInfo prop)
+        static private void SetControlValue(Control control, object value, PropertyInfo prop)
         {
             switch (control)
             {
@@ -343,7 +343,7 @@ namespace App2
             Close();
         }
 
-        private object? GetControlValue(Control control, Type targetType)
+        static private object? GetControlValue(Control control, Type targetType)
         {
             switch (control)
             {

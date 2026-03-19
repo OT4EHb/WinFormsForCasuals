@@ -15,21 +15,21 @@ namespace App2
 {
     public partial class FormData<T> : Form where T : class, new()
     {
-        MySqlConnection conn;
-        DataTable dt = new DataTable();
-        DataSet ds = new DataSet();
-        string tableName { get => typeof(T).GetCustomAttribute<TableNameAttribute>()!.Name; }
+        readonly MySqlConnection conn;
+        DataTable dt = new();
+        readonly DataSet ds = new();
+        static string TableName { get => typeof(T).GetCustomAttribute<TableNameAttribute>()!.Name; }
         public FormData(MySqlConnection connection)
         {
             conn = connection;
             InitializeComponent();
-            this.Text = $"Таблица {tableName}";
+            this.Text = $"Таблица {TableName}";
             UpdateData();
         }
 
         private void UpdateData()
         {
-            using MySqlCommand command = new($"Select * from {tableName}", conn);
+            using MySqlCommand command = new($"Select * from {TableName}", conn);
             using MySqlDataAdapter da = new(command);
             ds.Reset();
             da.Fill(ds);
@@ -54,7 +54,7 @@ namespace App2
                 var paramNames = properties.Select(p => "@" + p.Name).ToList();
 
                 string sql = $@"
-            INSERT INTO {tableName}
+            INSERT INTO {TableName}
             ({string.Join(", ", columnNames)})
             VALUES ({string.Join(", ", paramNames)})";
                 using var command = new MySqlCommand(sql, conn);
@@ -123,7 +123,7 @@ namespace App2
                     keys.Add($@"{key}=@{key}");
                 }
                 string sql = $@"
-            UPDATE {tableName}
+            UPDATE {TableName}
             SET {string.Join(", ", keys)}
             WHERE {primaryKey} = @primaryVal";
                 using var command = new MySqlCommand(sql, conn);
@@ -153,7 +153,7 @@ namespace App2
                 }
             }
             var id = (uint)dataGridView1.CurrentRow.Cells[primary!.ToString()].Value;
-            using MySqlCommand command = new($"Delete from {tableName} where {primary}= @id", conn);
+            using MySqlCommand command = new($"Delete from {TableName} where {primary}= @id", conn);
             command.Parameters.AddWithValue("ID", id);
             command.ExecuteNonQuery();
             UpdateData();
