@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace App2.DataClass
 {
     [TableName("futurainfo")]
+    [DisplayName("Информация о накладных")]
     internal class FuturaInfo
     {
         [IsPrimaryKey]

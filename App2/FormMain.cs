@@ -19,7 +19,7 @@ namespace App2
         void showData<T>() where T:class,new()
         {
             FormData<T> form = new(Con);
-            form.ShowDialog();
+            form.Show();
         }
 
         public void buttonClient_Click(object sender, EventArgs e)

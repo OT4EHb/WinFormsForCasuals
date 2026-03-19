@@ -14,12 +14,6 @@
     }
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class DisplayNameAttribute(string name) : Attribute
-    {
-        public string Name { get; } = name;
-    }
-
-    [AttributeUsage(AttributeTargets.Property)]
     public class IsPrimaryKeyAttribute : Attribute
     {
         public bool AutoIncrement { get; set; } = true;

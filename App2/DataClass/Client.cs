@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace App2.DataClass
 {
     [TableName("client")]
+    [DisplayName("Клиенты")]
     internal class Client
     {
         [IsPrimaryKey]

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace App2.DataClass
 {
     [TableName("product")]
+    [DisplayName("Продукты")]
     internal class Product
     {
         [IsPrimaryKey]

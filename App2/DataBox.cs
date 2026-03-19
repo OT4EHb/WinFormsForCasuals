@@ -39,7 +39,8 @@ namespace App2
 
         private void BuildForm()
         {
-            this.Text = _isNewItem ? $"Добавление {tableName}" : $"Редактирование {tableName}";
+            var displayName = typeof(T).GetCustomAttribute<DisplayNameAttribute>()!.DisplayName;
+            this.Text = _isNewItem ? $"Добавление {displayName}" : $"Редактирование {displayName}";
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -63,7 +64,7 @@ namespace App2
 
             var titleLabel = new Label
             {
-                Text = tableName,
+                Text = displayName,
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 TextAlign = ContentAlignment.MiddleCenter,
                 Dock = DockStyle.Fill,
@@ -110,10 +111,10 @@ namespace App2
                 Size = new Size(100, 30),
                 BackColor = Color.FromArgb(52, 152, 219),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
             };
             btnOk.Click += (s, e) => SaveData();
-
+            
             _buttonPanel.Controls.Add(btnCancel);
             _buttonPanel.Controls.Add(btnOk);
             _mainLayout.Controls.Add(_buttonPanel, 0, row);
@@ -126,17 +127,17 @@ namespace App2
         {
             if (prop.GetCustomAttribute<IsPrimaryKeyAttribute>()?.AutoIncrement == true) return;
             var displayAttr = prop.GetCustomAttribute<DisplayNameAttribute>();
-            string displayName = displayAttr?.Name ?? prop.Name;
+            string displayName = displayAttr?.DisplayName ?? prop.Name;
 
             var label = new Label
             {
                 Text = displayName + ":",
                 TextAlign = ContentAlignment.TopRight,
-                AutoSize=true,
+                AutoSize = true,
                 Dock = DockStyle.Fill,
                 Padding = new Padding(0, 5, 10, 0),
                 Font = new Font("Segoe UI", 10F),
-                Height=50,
+                Height = 50,
             };
 
             var control = CreateInputControl(prop);
@@ -207,7 +208,8 @@ namespace App2
                 var textBox = new TextBox { Width = 200 };
 
                 if (propType == typeof(int) || propType == typeof(decimal) ||
-                    propType == typeof(double) || propType == typeof(float))
+                    propType == typeof(double) || propType == typeof(float) ||
+                    propType == typeof(uint))
                 {
                     textBox.KeyPress += NumericTextBox_KeyPress;
                 }
@@ -290,9 +292,6 @@ namespace App2
                         await PopulateComboBox(comboBox, fkAttr);
                         if (Item != null)
                         {
-                            foreach (var item in comboBox.Items) {
-                                Debug.WriteLine($"{item}");
-                            }
                             comboBox.SelectedValue = prop.GetValue(Item);
                         }
                     }
@@ -359,6 +358,7 @@ namespace App2
                         if (underlyingType == typeof(int)) return int.Parse(text);
                         if (underlyingType == typeof(decimal)) return decimal.Parse(text);
                         if (underlyingType == typeof(double)) return double.Parse(text);
+                        if (underlyingType == typeof(uint)) return uint.Parse(text);
                         break;
                     }
                 case CheckBox checkBox:
