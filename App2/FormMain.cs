@@ -34,7 +34,8 @@ namespace App2
 
         private void buttonFutura_Click(object sender, EventArgs e)
         {
-            showData<Futura>();
+            FormFutura form = new(Con);
+            form.Show();
         }
 
         private void buttonReport_Click(object sender, EventArgs e)

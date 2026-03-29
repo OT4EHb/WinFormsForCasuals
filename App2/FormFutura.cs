@@ -1,4 +1,5 @@
-﻿using MySql.Data.MySqlClient;
+﻿using App2.DataClass;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,42 +11,63 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
 namespace App2
 {
-    public partial class FormData<T> : Form where T : class, new()
+    public partial class FormFutura : Form
     {
         readonly MySqlConnection conn;
         DataTable dt = new();
+        DataTable dt2 = new();
         readonly DataSet ds = new();
-        static string TableName { get => typeof(T).GetCustomAttribute<TableNameAttribute>()!.Name; }
-        public FormData(MySqlConnection connection)
+        readonly DataSet ds2 = new();
+        public FormFutura(MySqlConnection connection)
         {
             conn = connection;
             InitializeComponent();
-            this.Text = $"Таблица {TableName}";
-            UpdateData();
+            this.Text = $"Таблица Накладная";
+            UpdateFutura();
+            this.StartPosition = FormStartPosition.CenterScreen;
         }
 
-        private void UpdateData()
+        private void UpdateFutura()
         {
-            using MySqlCommand command = new($"Select * from {TableName}", conn);
+            var cell = gridFutura.CurrentRow;
+            using MySqlCommand command = new($"Select * from futura", conn);
             using MySqlDataAdapter da = new(command);
             ds.Reset();
             da.Fill(ds);
             dt = ds.Tables[0];
-            dataGridView1.DataSource = dt;
-            for (int i = 0; i < dataGridView1.ColumnCount; i++)
+            gridFutura.DataSource = dt;
+            for (int i = 0; i < gridFutura.ColumnCount; i++)
             {
-                dataGridView1.Columns[i].HeaderText = 
-                    typeof(T).GetProperties()[i].GetCustomAttribute<DisplayNameAttribute>()!.DisplayName;
+                gridFutura.Columns[i].HeaderText = 
+                    typeof(Futura).GetProperties()[i].GetCustomAttribute<DisplayNameAttribute>()!.DisplayName;
             }
-            this.StartPosition = FormStartPosition.CenterScreen;
-
+            UpdateInfo();
         }
 
-        private void addMenuItem(object sender, EventArgs e)
+        private void UpdateInfo()
         {
+            var row = gridFutura.CurrentRow;
+            if (row == null) return;
+            var cell = row.Cells["ID"].Value;
+            using MySqlCommand command1 = new($"Select * from futurainfo where IDFutura=@id", conn);
+            command1.Parameters.AddWithValue("id", cell);
+            using MySqlDataAdapter da1 = new(command1);
+            ds2.Reset();
+            da1.Fill(ds2);
+            dt2 = ds2.Tables[0];
+            gridInfo.DataSource = dt2;
+            for (int i = 0; i < gridInfo.ColumnCount; i++)
+            {
+                gridInfo.Columns[i].HeaderText 
+                    = typeof(FuturaInfo).GetProperties()[i].GetCustomAttribute<DisplayNameAttribute>()!.DisplayName;
+            }
+        }
+
+        private void addItem<T>() where T : class, new()
+        {
+            var tableName = typeof(T).GetCustomAttribute<TableNameAttribute>()!.Name;
             using DataBox<T> form = new(conn);
             if (form.ShowDialog() == DialogResult.OK)
             {
@@ -55,7 +77,7 @@ namespace App2
                 var paramNames = properties.Select(p => "@" + p.Name).ToList();
 
                 string sql = $@"
-            INSERT INTO {TableName}
+            INSERT INTO {tableName}
             ({string.Join(", ", columnNames)})
             VALUES ({string.Join(", ", paramNames)})";
                 using var command = new MySqlCommand(sql, conn);
@@ -67,14 +89,18 @@ namespace App2
                         );
                 }
                 command.ExecuteNonQuery();
-                UpdateData();
+                UpdateFutura();
             }
         }
 
-        private void replaceMenuItem(object sender, EventArgs e)
+        private void replaceItem<T>(DataGridView grid) where T : class, new()
         {
-            var row = dataGridView1.CurrentRow;
-            if (row == null) return;
+            var row = grid.CurrentRow;
+            if (row == null)
+            {
+                return;
+            }
+
             var item = new T();
             var properties = typeof(T).GetProperties();
             foreach (var prop in properties)
@@ -83,7 +109,7 @@ namespace App2
                 var columnAttr = prop.GetCustomAttribute<ColumnNameAttribute>();
                 if (columnAttr != null)
                     columnName = columnAttr.Name;
-                if (dataGridView1.Columns.Contains(columnName))
+                if (grid.Columns.Contains(columnName))
                 {
                     var cellValue = row.Cells[columnName].Value;
                     if (cellValue != null && cellValue != DBNull.Value)
@@ -104,9 +130,10 @@ namespace App2
             using DataBox<T> form = new(conn, item);
             if (form.ShowDialog() == DialogResult.OK)
             {
+                var tableName = typeof(T).GetCustomAttribute<TableNameAttribute>()!.Name;
                 List<string> keys = [];
                 object primaryKey = "ID";
-                object? primaryVal= null;
+                object? primaryVal = null;
 
                 foreach (var prop in properties)
                 {
@@ -124,7 +151,7 @@ namespace App2
                     keys.Add($@"{key}=@{key}");
                 }
                 string sql = $@"
-            UPDATE {TableName}
+            UPDATE {tableName}
             SET {string.Join(", ", keys)}
             WHERE {primaryKey} = @primaryVal";
                 using var command = new MySqlCommand(sql, conn);
@@ -137,15 +164,16 @@ namespace App2
                         );
                 }
                 command.Parameters.AddWithValue("primaryVal", primaryVal);
-                var res=command.ExecuteNonQuery();
-                UpdateData();
+                var res = command.ExecuteNonQuery();
+                UpdateFutura();
             }
         }
 
-        private void deleteMenuItem(object sender, EventArgs e)
+        private void deleteItem<T>(DataGridView grid)
         {
+            var tableName = typeof(T).GetCustomAttribute<TableNameAttribute>()!.Name;
             object? primary = null;
-            foreach(var i in typeof(T).GetProperties())
+            foreach (var i in typeof(T).GetProperties())
             {
                 if (i.GetCustomAttribute<IsPrimaryKeyAttribute>() != null)
                 {
@@ -153,11 +181,12 @@ namespace App2
                     break;
                 }
             }
-            var id = (uint)dataGridView1.CurrentRow.Cells[primary!.ToString()].Value;
-            using MySqlCommand command = new($"Delete from {TableName} where {primary}= @id", conn);
+            if (primary == null) return;
+            var id = (uint)grid.CurrentRow.Cells[primary!.ToString()].Value;
+            using MySqlCommand command = new($"Delete from {tableName} where {primary}= @id", conn);
             command.Parameters.AddWithValue("ID", id);
             command.ExecuteNonQuery();
-            UpdateData();
+            UpdateFutura();
         }
 
         private void exitMenuItem(object sender, EventArgs e)
@@ -167,7 +196,42 @@ namespace App2
 
         private void updateMenuItem(object sender, EventArgs e)
         {
-            UpdateData();
+            UpdateFutura();
+        }
+
+        private void gridFutura_CurrentCellChanged(object sender, EventArgs e)
+        {
+            UpdateInfo();
+        }
+
+        private void addFutura(object sender, EventArgs e)
+        {
+            addItem<Futura>();
+        }
+
+        private void addInfo(object sender, EventArgs e)
+        {
+            addItem<FuturaInfo>();
+        }
+
+        private void replaceFutura(object sender, EventArgs e)
+        {
+            replaceItem<Futura>(gridFutura);
+        }
+
+        private void replaceInfo(object sender, EventArgs e)
+        {
+            replaceItem<FuturaInfo>(gridInfo);
+        }
+
+        private void deleteFutura(object sender, EventArgs e)
+        {
+            deleteItem<Futura>(gridFutura);
+        }
+
+        private void deleteInfo(object sender, EventArgs e)
+        {
+            deleteItem<FuturaInfo>(gridInfo);
         }
     }
 }

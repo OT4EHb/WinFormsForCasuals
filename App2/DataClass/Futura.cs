@@ -22,7 +22,7 @@ namespace App2.DataClass
         public uint IDClient { get; set; } = 0;
 
         [ColumnName("DateV")]
-        [DisplayName("Дата чего-то")]
+        [DisplayName("Дата")]
         public DateTime DateV { get; set; } = DateTime.Now;
 
         [ColumnName("TotalSum")]

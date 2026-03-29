@@ -35,6 +35,17 @@ namespace App2
             InitializeComponent();
             BuildForm();
             LoadData();
+            if (!_isNewItem)
+            {
+                foreach (var i in _fieldControls)
+                {
+                    if (typeof(T).GetProperty(i.Key)!.GetCustomAttribute<ForeignKeyAttribute>() != null)
+                    {
+                        i.Value.Enabled = false;
+                        _fieldLabels[i.Key].Enabled = false;
+                    }
+                }
+            }
         }
 
         private void BuildForm()
@@ -290,7 +301,11 @@ namespace App2
                     if (control is ComboBox comboBox)
                     {
                         await PopulateComboBox(comboBox, fkAttr);
-                        if (Item != null)
+                        if (_isNewItem)
+                        {
+                            comboBox.SelectedIndex = 0;
+                        }
+                        else
                         {
                             comboBox.SelectedValue = prop.GetValue(Item);
                         }
