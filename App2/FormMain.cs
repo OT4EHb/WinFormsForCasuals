@@ -13,7 +13,14 @@ namespace App2
             InitializeComponent();
             string connectionString = "Server=localhost;Database=netbase;Uid=root;Pwd=mariadb;";
             Con = new MySqlConnection(connectionString);
-            Con.Open();
+            try
+            {
+                Con.Open();
+            }
+            catch (MySqlException ex)
+            {
+                MessageBox.Show("Открой БД");
+            }
         }
 
         void showData<T>() where T:class,new()
@@ -34,7 +41,7 @@ namespace App2
 
         private void buttonFutura_Click(object sender, EventArgs e)
         {
-            FormFutura form = new(Con);
+            ForeignForm<Futura,FuturaInfo> form = new(Con);
             form.Show();
         }
 

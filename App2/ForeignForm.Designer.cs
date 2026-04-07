@@ -1,6 +1,10 @@
-﻿namespace App2
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+
+namespace App2
 {
-    partial class FormFutura
+    partial class ForeignForm<D,T>
     {
         /// <summary>
         /// Required designer variable.
@@ -40,11 +44,11 @@
             накладнаяToolStripMenuItem1 = new ToolStripMenuItem();
             товарToolStripMenuItem1 = new ToolStripMenuItem();
             выходToolStripMenuItem = new ToolStripMenuItem();
-            gridFutura = new DataGridView();
-            gridInfo = new DataGridView();
+            gridD = new DataGridView();
+            gridT = new DataGridView();
             menuStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)gridFutura).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)gridInfo).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gridD).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gridT).BeginInit();
             SuspendLayout();
             // 
             // menuStrip1
@@ -75,15 +79,15 @@
             // 
             накладнаяToolStripMenuItem.Name = "накладнаяToolStripMenuItem";
             накладнаяToolStripMenuItem.Size = new Size(165, 26);
-            накладнаяToolStripMenuItem.Text = "накладная";
-            накладнаяToolStripMenuItem.Click += addFutura;
+            накладнаяToolStripMenuItem.Text = DisplayD;
+            накладнаяToolStripMenuItem.Click += addD;
             // 
             // товарToolStripMenuItem
             // 
             товарToolStripMenuItem.Name = "товарToolStripMenuItem";
             товарToolStripMenuItem.Size = new Size(165, 26);
-            товарToolStripMenuItem.Text = "товар";
-            товарToolStripMenuItem.Click += addInfo;
+            товарToolStripMenuItem.Text = DisplayT;
+            товарToolStripMenuItem.Click += addT;
             // 
             // изменитьToolStripMenuItem
             // 
@@ -96,15 +100,15 @@
             // 
             накладнаяToolStripMenuItem2.Name = "накладнаяToolStripMenuItem2";
             накладнаяToolStripMenuItem2.Size = new Size(165, 26);
-            накладнаяToolStripMenuItem2.Text = "накладная";
-            накладнаяToolStripMenuItem2.Click += replaceFutura;
+            накладнаяToolStripMenuItem2.Text = DisplayD;
+            накладнаяToolStripMenuItem2.Click += replaceD;
             // 
             // товарToolStripMenuItem2
             // 
             товарToolStripMenuItem2.Name = "товарToolStripMenuItem2";
             товарToolStripMenuItem2.Size = new Size(165, 26);
-            товарToolStripMenuItem2.Text = "товар";
-            товарToolStripMenuItem2.Click += replaceInfo;
+            товарToolStripMenuItem2.Text = DisplayT;
+            товарToolStripMenuItem2.Click += replaceT;
             // 
             // удалитьToolStripMenuItem
             // 
@@ -117,15 +121,15 @@
             // 
             накладнаяToolStripMenuItem1.Name = "накладнаяToolStripMenuItem1";
             накладнаяToolStripMenuItem1.Size = new Size(165, 26);
-            накладнаяToolStripMenuItem1.Text = "накладная";
-            накладнаяToolStripMenuItem1.Click += deleteFutura;
+            накладнаяToolStripMenuItem1.Text = DisplayD;
+            накладнаяToolStripMenuItem1.Click += deleteD;
             // 
             // товарToolStripMenuItem1
             // 
             товарToolStripMenuItem1.Name = "товарToolStripMenuItem1";
             товарToolStripMenuItem1.Size = new Size(165, 26);
-            товарToolStripMenuItem1.Text = "товар";
-            товарToolStripMenuItem1.Click += deleteInfo;
+            товарToolStripMenuItem1.Text = DisplayT;
+            товарToolStripMenuItem1.Click += deleteT;
             // 
             // выходToolStripMenuItem
             // 
@@ -136,38 +140,38 @@
             // 
             // gridFutura
             // 
-            gridFutura.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            gridFutura.Location = new Point(12, 40);
-            gridFutura.Name = "gridFutura";
-            gridFutura.RowHeadersWidth = 51;
-            gridFutura.Size = new Size(776, 176);
-            gridFutura.TabIndex = 1;
-            gridFutura.CurrentCellChanged += gridFutura_CurrentCellChanged;
+            gridD.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            gridD.Location = new Point(12, 40);
+            gridD.Name = "gridFutura";
+            gridD.RowHeadersWidth = 51;
+            gridD.Size = new Size(776, 176);
+            gridD.TabIndex = 1;
+            gridD.CurrentCellChanged += gridFutura_CurrentCellChanged;
             // 
             // gridInfo
             // 
-            gridInfo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            gridInfo.Location = new Point(12, 241);
-            gridInfo.Name = "gridInfo";
-            gridInfo.RowHeadersWidth = 51;
-            gridInfo.Size = new Size(776, 188);
-            gridInfo.TabIndex = 2;
+            gridT.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            gridT.Location = new Point(12, 241);
+            gridT.Name = "gridInfo";
+            gridT.RowHeadersWidth = 51;
+            gridT.Size = new Size(776, 188);
+            gridT.TabIndex = 2;
             // 
             // FormFutura
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
-            Controls.Add(gridInfo);
-            Controls.Add(gridFutura);
+            Controls.Add(gridT);
+            Controls.Add(gridD);
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;
             Name = "FormFutura";
             Text = "FormFutura";
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)gridFutura).EndInit();
-            ((System.ComponentModel.ISupportInitialize)gridInfo).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridD).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridT).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -183,8 +187,8 @@
         private ToolStripMenuItem накладнаяToolStripMenuItem1;
         private ToolStripMenuItem товарToolStripMenuItem1;
         private ToolStripMenuItem выходToolStripMenuItem;
-        private DataGridView gridFutura;
-        private DataGridView gridInfo;
+        private DataGridView gridD;
+        private DataGridView gridT;
         private ToolStripMenuItem изменитьToolStripMenuItem;
         private ToolStripMenuItem накладнаяToolStripMenuItem2;
         private ToolStripMenuItem товарToolStripMenuItem2;

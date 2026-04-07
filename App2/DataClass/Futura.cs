@@ -18,7 +18,7 @@ namespace App2.DataClass
 
         [ForeignKey("client", "Name")]
         [ColumnName("IDClient")]
-        [DisplayName("Имя клиента")]
+        [DisplayName("ID клиента")]
         public uint IDClient { get; set; } = 0;
 
         [ColumnName("DateV")]

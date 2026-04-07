@@ -19,33 +19,62 @@ namespace App2
         private readonly bool _isNewItem;
         public T Item { get; set; }
         private TableLayoutPanel _mainLayout;
-        readonly private Dictionary<string, Control> _fieldControls;
-        readonly private Dictionary<string, Label> _fieldLabels;
+        public Dictionary<string, Control> FieldControls { get; set; }
+        public Dictionary<string, Label> FieldLabels { get; set; }
         private FlowLayoutPanel _buttonPanel;
         static string tableName { get => typeof(T).GetCustomAttribute<TableNameAttribute>()!.Name; }
+
+        private DataBox(MySqlConnection connection,  bool isNewItem)
+        {
+            _connection = connection;
+            _isNewItem = isNewItem;
+            FieldControls = [];
+            FieldLabels = [];
+        }
 
         public DataBox(MySqlConnection connection, T? item = null)
         {
             _connection = connection;
             Item = item ?? new T();
             _isNewItem = item == null;
-            _fieldControls = [];
-            _fieldLabels = [];
+            FieldControls = [];
+            FieldLabels = [];
 
             InitializeComponent();
             BuildForm();
             LoadData();
             if (!_isNewItem)
             {
-                foreach (var i in _fieldControls)
+                foreach (var i in FieldControls)
                 {
                     if (typeof(T).GetProperty(i.Key)!.GetCustomAttribute<ForeignKeyAttribute>() != null)
                     {
                         i.Value.Enabled = false;
-                        _fieldLabels[i.Key].Enabled = false;
+                        FieldLabels[i.Key].Enabled = false;
                     }
                 }
             }
+        }
+
+        public static async Task<DataBox<T>> AsyncInit(MySqlConnection connection, T? item = null)
+        {
+            var instance = new DataBox<T>(connection, item == null);
+            instance.Item = item??new T();
+            instance.InitializeComponent();
+            instance.BuildForm();
+            await instance.LoadData();
+            if (!instance._isNewItem)
+            {
+                foreach (var i in instance.FieldControls)
+                {
+                    if (typeof(T).GetProperty(i.Key)!.GetCustomAttribute<ForeignKeyAttribute>() != null)
+                    {
+                        i.Value.Enabled = false;
+                        instance.FieldLabels[i.Key].Enabled = false;
+                    }
+                }
+            }
+            return instance;
         }
 
         private void BuildForm()
@@ -124,7 +153,11 @@ namespace App2
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
             };
-            btnOk.Click += (s, e) => SaveData();
+            btnOk.Click += (s, e) =>
+            {
+                this.DialogResult = SaveData() ? DialogResult.OK : DialogResult.Cancel;
+                Close();
+            };
             
             _buttonPanel.Controls.Add(btnCancel);
             _buttonPanel.Controls.Add(btnOk);
@@ -160,8 +193,8 @@ namespace App2
 
             _mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
 
-            _fieldLabels[prop.Name] = label;
-            _fieldControls[prop.Name] = control;
+            FieldLabels[prop.Name] = label;
+            FieldControls[prop.Name] = control;
 
             row++;
         }
@@ -238,23 +271,35 @@ namespace App2
             }
         }
 
-        private async void LoadData()
+        private async Task LoadData()
         {
             await LoadForeignKeyData();
 
-            if (Item == null) return;
+            if (_isNewItem) return;
 
             foreach (var prop in typeof(T).GetProperties())
             {
-                if (_fieldControls.TryGetValue(prop.Name, out var control))
+                if (FieldControls.TryGetValue(prop.Name, out var control))
                 {
                     var value = prop.GetValue(Item)!;
-                    SetControlValue(control, value, prop);
+                    SetControlValue(control, _isNewItem?null:value);
+                }
+            }
+        }
+        
+        public void ItemSyncForm()
+        {
+            foreach (var prop in typeof(T).GetProperties())
+            {
+                if (FieldControls.TryGetValue(prop.Name, out var control))
+                {
+                    var value = prop.GetValue(Item)!;
+                    SetControlValue(control, value);
                 }
             }
         }
 
-        static private void SetControlValue(Control control, object value, PropertyInfo prop)
+        static private void SetControlValue(Control control, object? value)
         {
             switch (control)
             {
@@ -276,18 +321,15 @@ namespace App2
                     }
                     break;
                 case ComboBox comboBox:
-                    if (comboBox.DataSource is BindingSource bs)
+                    if (value != null)
                     {
-                        var items = bs.DataSource as List<KeyValuePair<object, string>>;
-                        var selected = items?.FirstOrDefault(kvp =>
-                            kvp.Key?.Equals(value) == true);
-                        comboBox.SelectedItem = selected;
+                        comboBox.SelectedValue = value;
                     }
-                    else if (prop.PropertyType.IsEnum && value != null)
+                    else
                     {
-                        comboBox.SelectedItem = value;
+                        comboBox.SelectedIndex = 0;
                     }
-                    break;
+                        break;
             }
         }
 
@@ -296,19 +338,11 @@ namespace App2
             foreach (var prop in typeof(T).GetProperties())
             {
                 var fkAttr = prop.GetCustomAttribute<ForeignKeyAttribute>();
-                if (fkAttr != null && _fieldControls.TryGetValue(prop.Name, out var control))
+                if (fkAttr != null && FieldControls.TryGetValue(prop.Name, out var control))
                 {
                     if (control is ComboBox comboBox)
                     {
                         await PopulateComboBox(comboBox, fkAttr);
-                        if (_isNewItem)
-                        {
-                            comboBox.SelectedIndex = 0;
-                        }
-                        else
-                        {
-                            comboBox.SelectedValue = prop.GetValue(Item);
-                        }
                     }
                 }
             }
@@ -335,27 +369,26 @@ namespace App2
             comboBox.DataSource = items;
         }
 
-        private void SaveData()
+        public bool SaveData()
         {
             try
             {
                 foreach (var prop in typeof(T).GetProperties())
                 {
-                    if (_fieldControls.TryGetValue(prop.Name, out var control))
+                    if (FieldControls.TryGetValue(prop.Name, out var control))
                     {
                         var value = GetControlValue(control, prop.PropertyType);
                         prop.SetValue(Item, value);
                     }
                 }
-
-                this.DialogResult = DialogResult.OK;
+                return true;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка",
                               MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            Close();
+            return false;
         }
 
         static private object? GetControlValue(Control control, Type targetType)

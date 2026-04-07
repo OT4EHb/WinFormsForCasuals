@@ -23,7 +23,7 @@ namespace App2.DataClass
 
         [ForeignKey("product", "Name")]
         [ColumnName("IDProduct")]
-        [DisplayName("Название продукта")]
+        [DisplayName("Продукт")]
         public uint IDProduct { get; set; } = 0;
 
         [ColumnName("Quantity")]
