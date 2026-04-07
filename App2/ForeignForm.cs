@@ -115,9 +115,9 @@ namespace App2
                             );
                     }
                     command.ExecuteNonQuery();
-                    UpdateD();
                 }
-            });
+            UpdateD();
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void replaceItem<Type>(DataGridView grid) where Type : class, new()

@@ -20,6 +20,7 @@ namespace App2
             catch (MySqlException ex)
             {
                 MessageBox.Show("Открой БД");
+                Environment.Exit(0);
             }
         }
 
@@ -47,7 +48,7 @@ namespace App2
 
         private void buttonReport_Click(object sender, EventArgs e)
         {
-            showData<FuturaInfo>();
+            new ReportForm(Con).Show();
         }
     }
 }
